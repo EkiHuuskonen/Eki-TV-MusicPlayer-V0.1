@@ -59,6 +59,22 @@ final class Player {
         updateNowPlaying()
     }
 
+    func resume() {
+        guard current != nil, !isPlaying || player.timeControlStatus == .paused else { return }
+        #if os(iOS) || os(tvOS)
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
+        try? AVAudioSession.sharedInstance().setActive(true)
+        #endif
+        player.play(); isPlaying = true
+        updateNowPlaying()
+    }
+
+    func pause() {
+        guard current != nil else { return }
+        player.pause(); isPlaying = false
+        updateNowPlaying()
+    }
+
     func next() {
         guard !queue.isEmpty else { return }
         if shuffle, queue.count > 1 {
@@ -97,6 +113,8 @@ final class Player {
         currentTime = 0
         duration = track.duration ?? 0
         #if os(iOS) || os(tvOS)
+        // Muut (esim. käynnistysääni) voivat jättää istunnon "mixWithOthers"-tilaan, jolloin lukitusnäytön ohjaimet katoavat
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
         try? AVAudioSession.sharedInstance().setActive(true)
         #endif
         player.play()
@@ -158,13 +176,17 @@ final class Player {
             MPMediaItemPropertyPlaybackDuration: duration,
             MPNowPlayingInfoPropertyElapsedPlaybackTime: currentTime,
             MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0,
+            MPNowPlayingInfoPropertyDefaultPlaybackRate: 1.0,
+            MPNowPlayingInfoPropertyMediaType: MPNowPlayingInfoMediaType.audio.rawValue,
         ]
+        MPNowPlayingInfoCenter.default().playbackState = isPlaying ? .playing : .paused
     }
 
     private func setupRemoteCommands() {
         let c = MPRemoteCommandCenter.shared()
-        c.playCommand.addTarget { [weak self] _ in Task { @MainActor in self?.togglePlay() }; return .success }
-        c.pauseCommand.addTarget { [weak self] _ in Task { @MainActor in self?.togglePlay() }; return .success }
+        for cmd in [c.playCommand, c.pauseCommand, c.togglePlayPauseCommand, c.nextTrackCommand, c.previousTrackCommand, c.changePlaybackPositionCommand] { cmd.isEnabled = true }
+        c.playCommand.addTarget { [weak self] _ in Task { @MainActor in self?.resume() }; return .success }
+        c.pauseCommand.addTarget { [weak self] _ in Task { @MainActor in self?.pause() }; return .success }
         c.togglePlayPauseCommand.addTarget { [weak self] _ in Task { @MainActor in self?.togglePlay() }; return .success }
         c.nextTrackCommand.addTarget { [weak self] _ in Task { @MainActor in self?.next() }; return .success }
         c.previousTrackCommand.addTarget { [weak self] _ in Task { @MainActor in self?.previous() }; return .success }
