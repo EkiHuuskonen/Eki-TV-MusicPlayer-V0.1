@@ -47,3 +47,8 @@ Windows-asennusohjelman voi rakentaa myös GitHub Actionsilla: *Actions → Buil
 Sovellus ei sisällä musiikkia. Kappaleet haetaan suoraan palvelujen avoimista rajapinnoista, ja jokaisen kappaleen lisenssi (esim. Creative Commons) näkyy "Nyt soi" -näkymässä, kun se on tiedossa. Tarkista käytettävien palvelujen käyttöehdot ennen jakelua.
 
 Versio 0.1 – työn alla.
+
+## Eki-TV-sovellus
+
+Soitin on mukana myös Eki-TV-fanisovelluksen (iPhone, iPad, Apple TV) "Musiikki"-välilehtenä.
+Jaettu koodi synkataan sinne komennolla `./sync_ekitv.sh`; aja se aina, kun `Shared/`, `iOS/` tai `tvOS/` muuttuu.
