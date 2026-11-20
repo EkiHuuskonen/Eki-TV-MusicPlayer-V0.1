@@ -1,6 +1,10 @@
 import Foundation
 import SwiftUI
 import Observation
+import CloudKit
+#if canImport(AppKit)
+import AppKit
+#endif
 
 struct LibAlbum: Identifiable {
     let artist: String
@@ -26,8 +30,6 @@ final class Library {
     var favorites: [Track] = []
     var playlists: [Playlist] = []
 
-    private struct Stored: Codable { var favorites: [Track]; var playlists: [Playlist] }
-
     @ObservationIgnored private let fileURL: URL = {
         let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("ArkistoSoitin", isDirectory: true)
@@ -35,17 +37,116 @@ final class Library {
         return dir.appendingPathComponent("library.json")
     }()
 
+    // Synkronointi (iCloud / CloudKit)
+    @ObservationIgnored private var favStamp: [String: Date] = [:]
+    @ObservationIgnored private var favGone: [String: Date] = [:]
+    @ObservationIgnored private var plStamp: [String: Date] = [:]
+    @ObservationIgnored private var plGone: [String: Date] = [:]
+    @ObservationIgnored private var snapFav: Set<String> = []
+    @ObservationIgnored private var snapPl: [String: Playlist] = [:]
+    @ObservationIgnored private let cloud = CloudStore()
+    @ObservationIgnored private var syncing = false
+    @ObservationIgnored private var syncAgain = false
+    /// Näytettävä tila: "iCloud: synkronoitu", "iCloud ei käytössä" tms.
+    var syncStatus = ""
+
     init() {
         if let data = try? Data(contentsOf: fileURL),
-           let s = try? JSONDecoder().decode(Stored.self, from: data) {
-            favorites = s.favorites
-            playlists = s.playlists
+           let s = try? LibraryState.decoder().decode(LibraryState.self, from: data) {
+            favorites = s.favorites; playlists = s.playlists
+            favStamp = s.favStamp; favGone = s.favGone; plStamp = s.plStamp; plGone = s.plGone
         }
+        snapFav = Set(favorites.map { $0.id })
+        snapPl = Dictionary(playlists.map { ($0.id.uuidString, $0) }, uniquingKeysWith: { a, _ in a })
+        startSync()
+    }
+
+    private func state() -> LibraryState {
+        var s = LibraryState()
+        s.favorites = favorites; s.favStamp = favStamp; s.favGone = favGone
+        s.playlists = playlists; s.plStamp = plStamp; s.plGone = plGone
+        return s
+    }
+
+    private func apply(_ s: LibraryState) {
+        favorites = s.favorites; favStamp = s.favStamp; favGone = s.favGone
+        playlists = s.playlists; plStamp = s.plStamp; plGone = s.plGone
+        snapFav = Set(favorites.map { $0.id })
+        snapPl = Dictionary(playlists.map { ($0.id.uuidString, $0) }, uniquingKeysWith: { a, _ in a })
+    }
+
+    private func writeLocal() {
+        if let data = try? LibraryState.encoder().encode(state()) { try? data.write(to: fileURL, options: .atomic) }
     }
 
     private func save() {
-        if let data = try? JSONEncoder().encode(Stored(favorites: favorites, playlists: playlists)) {
-            try? data.write(to: fileURL, options: .atomic)
+        let now = Date()
+        let ids = Set(favorites.map { $0.id })
+        for id in ids.subtracting(snapFav) { favStamp[id] = now; favGone[id] = nil }
+        for id in snapFav.subtracting(ids) { favGone[id] = now; favStamp[id] = nil }
+        snapFav = ids
+        let cur = Dictionary(playlists.map { ($0.id.uuidString, $0) }, uniquingKeysWith: { a, _ in a })
+        for (id, p) in cur where snapPl[id] != p { plStamp[id] = now; plGone[id] = nil }
+        for id in snapPl.keys where cur[id] == nil { plGone[id] = now; plStamp[id] = nil }
+        snapPl = cur
+        writeLocal()
+        Task { await sync() }
+    }
+
+    // MARK: iCloud-synkronointi
+
+    private func startSync() {
+        Task { await sync() }
+        // Päivitys säännöllisesti ja kun sovellus tulee etualalle
+        Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(45))
+                await self?.sync()
+            }
+        }
+        #if canImport(UIKit)
+        NotificationCenter.default.addObserver(forName: UIApplication.willEnterForegroundNotification, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in await self?.sync() }
+        }
+        #elseif canImport(AppKit)
+        NotificationCenter.default.addObserver(forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in await self?.sync() }
+        }
+        #endif
+    }
+
+    /// Hakee pilvestä, yhdistää paikalliseen kirjastoon ja kirjoittaa tuloksen takaisin.
+    func sync() async {
+        if syncing { syncAgain = true; return }
+        syncing = true
+        defer { syncing = false }
+        repeat {
+            syncAgain = false
+            await syncOnce()
+        } while syncAgain
+    }
+
+    private func syncOnce() async {
+        guard await cloud.available() else { syncStatus = "iCloud ei käytössä (kirjaudu iCloudiin)"; return }
+        for _ in 0..<3 {
+            do {
+                let remote = try await cloud.fetch()
+                // Ei awaitia tämän ja apply():n välissä, jotta välissä tehdyt muutokset eivät katoa
+                let merged = LibraryState.merge(state(), remote?.state ?? LibraryState())
+                apply(merged)
+                writeLocal()
+                if let r = remote,
+                   let a = try? LibraryState.encoder().encode(r.state),
+                   let b = try? LibraryState.encoder().encode(merged), a == b {
+                    syncStatus = "iCloud: synkronoitu"; return
+                }
+                try await cloud.save(merged, base: remote?.record)
+                syncStatus = "iCloud: synkronoitu"; return
+            } catch let e as CKError where e.code == .serverRecordChanged {
+                continue
+            } catch {
+                syncStatus = "iCloud-virhe: \(error.localizedDescription)"; return
+            }
         }
     }
 
