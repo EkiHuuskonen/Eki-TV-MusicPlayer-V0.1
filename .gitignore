@@ -9,3 +9,11 @@ electron/node_modules/
 electron/out/
 electron/dist/
 electron/test-out/
+
+# Xcode / Apple-versiot
+Config/Local.xcconfig
+*.xcodeproj/
+/build/
+DerivedData/
+
+*.app/

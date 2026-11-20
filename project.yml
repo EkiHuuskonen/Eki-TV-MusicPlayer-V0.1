@@ -1,0 +1,95 @@
+name: EkiTVMusicPlayer
+options:
+  bundleIdPrefix: fi.ekitv
+  createIntermediateGroups: true
+  deploymentTarget:
+    macOS: "14.0"
+    iOS: "18.0"
+    tvOS: "18.0"
+configFiles:
+  Debug: Config/Base.xcconfig
+  Release: Config/Base.xcconfig
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+    GENERATE_INFOPLIST_FILE: NO
+
+targets:
+  MusicPlayer-macOS:
+    type: application
+    platform: macOS
+    sources:
+      - path: Shared
+      - path: macOS
+        excludes: ["Info.plist"]
+    settings:
+      base:
+        PRODUCT_NAME: Eki-TV MusicPlayer
+        PRODUCT_MODULE_NAME: EkiTVMusicPlayer
+        PRODUCT_BUNDLE_IDENTIFIER: fi.ekitv.musicplayer
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_FILE: macOS/Info.plist
+        ENABLE_HARDENED_RUNTIME: NO
+    info:
+      path: macOS/Info.plist
+      properties:
+        CFBundleDisplayName: Eki-TV MusicPlayer
+        LSMinimumSystemVersion: "14.0"
+        LSApplicationCategoryType: public.app-category.music
+        NSHighResolutionCapable: true
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoadsInMedia: true
+
+  MusicPlayer-iOS:
+    type: application
+    platform: iOS
+    sources:
+      - path: Shared
+      - path: iOS
+        excludes: ["Info.plist"]
+    settings:
+      base:
+        PRODUCT_NAME: Eki-TV MusicPlayer
+        PRODUCT_MODULE_NAME: EkiTVMusicPlayer
+        PRODUCT_BUNDLE_IDENTIFIER: fi.ekitv.musicplayer
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_FILE: iOS/Info.plist
+    info:
+      path: iOS/Info.plist
+      properties:
+        CFBundleDisplayName: Eki-TV Music
+        UILaunchScreen: {}
+        UIBackgroundModes: [audio]
+        ITSAppUsesNonExemptEncryption: false
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoadsInMedia: true
+
+  MusicPlayer-tvOS:
+    type: application
+    platform: tvOS
+    sources:
+      - path: Shared
+      - path: tvOS
+        excludes: ["Info.plist"]
+    settings:
+      base:
+        PRODUCT_NAME: Eki-TV MusicPlayer
+        PRODUCT_MODULE_NAME: EkiTVMusicPlayer
+        PRODUCT_BUNDLE_IDENTIFIER: fi.ekitv.musicplayer
+        INFOPLIST_FILE: tvOS/Info.plist
+    info:
+      path: tvOS/Info.plist
+      properties:
+        CFBundleDisplayName: Eki-TV Music
+        UIBackgroundModes: [audio]
+        UILaunchScreen: {}
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoadsInMedia: true

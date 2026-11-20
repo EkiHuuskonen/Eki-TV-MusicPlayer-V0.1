@@ -22,6 +22,8 @@ final class Player {
     @ObservationIgnored private let player = AVPlayer()
     @ObservationIgnored private var timeObserver: Any?
     @ObservationIgnored private var endObserver: NSObjectProtocol?
+    @ObservationIgnored private var statusObservation: NSKeyValueObservation?
+    @ObservationIgnored private var localFile: URL?
 
     init() {
         player.volume = volume
@@ -33,6 +35,14 @@ final class Player {
             }
         }
         setupRemoteCommands()
+        #if os(iOS) || os(tvOS)
+        // Toisto jatkuu taustalla ja äänettömän kytkimen yli
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+        #endif
+    }
+
+    var debugInfo: String {
+        "status=\(player.timeControlStatus.rawValue) reason=\(player.reasonForWaitingToPlay?.rawValue ?? "-") err=\(String(describing: player.currentItem?.error)) itemStatus=\(player.currentItem?.status.rawValue ?? -1) time=\(player.currentTime().seconds) url=\(current?.url.absoluteString ?? "-")"
     }
 
     func play(_ tracks: [Track], start: Int = 0) {
@@ -81,9 +91,14 @@ final class Player {
         endObserver = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main) { [weak self] _ in
             Task { @MainActor in self?.next() }
         }
+        removeLocalFile()
+        watch(item, for: track)
         player.replaceCurrentItem(with: item)
         currentTime = 0
         duration = track.duration ?? 0
+        #if os(iOS) || os(tvOS)
+        try? AVAudioSession.sharedInstance().setActive(true)
+        #endif
         player.play()
         isPlaying = true
         updateNowPlaying()
@@ -95,12 +110,53 @@ final class Player {
         }
     }
 
+    // MARK: Varatoisto: jos suoratoisto epäonnistuu (esim. palvelin ei tue AVPlayerin vaatimia tavuhakuja),
+    // kappale ladataan väliaikaistiedostoon ja soitetaan sieltä.
+
+    private func watch(_ item: AVPlayerItem, for track: Track) {
+        statusObservation = item.observe(\.status, options: [.new]) { [weak self] item, _ in
+            guard item.status == .failed else { return }
+            Task { @MainActor in self?.fallbackToLocal(track) }
+        }
+    }
+
+    private func removeLocalFile() {
+        if let f = localFile { try? FileManager.default.removeItem(at: f) }
+        localFile = nil
+    }
+
+    private func fallbackToLocal(_ track: Track) {
+        guard current?.id == track.id, localFile == nil, !track.isLive else { return }
+        Task {
+            do {
+                let (tmp, _) = try await URLSession.shared.download(from: track.url)
+                guard self.current?.id == track.id else { try? FileManager.default.removeItem(at: tmp); return }
+                let ext = (track.file as NSString).pathExtension
+                let dest = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + "." + (ext.isEmpty ? "mp3" : ext))
+                try FileManager.default.moveItem(at: tmp, to: dest)
+                self.localFile = dest
+                let item = AVPlayerItem(url: dest)
+                if let old = self.endObserver { NotificationCenter.default.removeObserver(old) }
+                self.endObserver = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main) { [weak self] _ in
+                    Task { @MainActor in self?.next() }
+                }
+                self.statusObservation = nil
+                self.player.replaceCurrentItem(with: item)
+                self.player.play()
+                self.isPlaying = true
+            } catch {
+                self.isPlaying = false
+            }
+        }
+    }
+
     private func updateNowPlaying() {
         guard let t = current else { return }
         MPNowPlayingInfoCenter.default().nowPlayingInfo = [
             MPMediaItemPropertyTitle: t.title,
             MPMediaItemPropertyArtist: t.artist ?? "",
             MPMediaItemPropertyPlaybackDuration: duration,
+            MPNowPlayingInfoPropertyElapsedPlaybackTime: currentTime,
             MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0,
         ]
     }
@@ -112,5 +168,10 @@ final class Player {
         c.togglePlayPauseCommand.addTarget { [weak self] _ in Task { @MainActor in self?.togglePlay() }; return .success }
         c.nextTrackCommand.addTarget { [weak self] _ in Task { @MainActor in self?.next() }; return .success }
         c.previousTrackCommand.addTarget { [weak self] _ in Task { @MainActor in self?.previous() }; return .success }
+        c.changePlaybackPositionCommand.addTarget { [weak self] event in
+            guard let e = event as? MPChangePlaybackPositionCommandEvent else { return .commandFailed }
+            Task { @MainActor in self?.seek(to: e.positionTime) }
+            return .success
+        }
     }
 }

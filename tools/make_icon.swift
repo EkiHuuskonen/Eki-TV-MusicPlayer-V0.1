@@ -7,15 +7,18 @@ func gradient(_ colors: [(CGFloat, CGFloat, CGFloat, CGFloat)], _ locs: [CGFloat
     return CGGradient(colorsSpace: cs, colors: cg, locations: locs)!
 }
 
-func draw(_ ctx: CGContext) {
+func draw(_ ctx: CGContext, fullBleed: Bool = false) {
     // Koordinaatisto 0...1, origo vasemmassa alakulmassa
-    let rect = CGRect(x: 0.098, y: 0.098, width: 0.804, height: 0.804)
-    let shape = CGPath(roundedRect: rect, cornerWidth: 0.185, cornerHeight: 0.185, transform: nil)
+    // fullBleed = iOS/tvOS-ikoni: neliö reunasta reunaan ilman läpinäkyvyyttä (järjestelmä pyöristää kulmat)
+    let rect = fullBleed ? CGRect(x: 0, y: 0, width: 1, height: 1) : CGRect(x: 0.098, y: 0.098, width: 0.804, height: 0.804)
+    let shape = fullBleed ? CGPath(rect: rect, transform: nil) : CGPath(roundedRect: rect, cornerWidth: 0.185, cornerHeight: 0.185, transform: nil)
 
     // Varjo
     ctx.saveGState()
+    if !fullBleed {
     ctx.setShadow(offset: CGSize(width: 0, height: -0.014), blur: 0.03, color: CGColor(gray: 0, alpha: 0.4))
     ctx.addPath(shape); ctx.setFillColor(CGColor(gray: 0.1, alpha: 1)); ctx.fillPath()
+    }
     ctx.restoreGState()
 
     ctx.saveGState()
@@ -74,14 +77,16 @@ func draw(_ ctx: CGContext) {
     ctx.restoreGState()
 
     // Ohut kiiltoreuna
+    if !fullBleed {
     ctx.saveGState()
     ctx.addPath(shape); ctx.replacePathWithStrokedPath(); ctx.clip()
     let rim = gradient([(1, 1, 1, 0.45), (1, 1, 1, 0.05)], [0, 1])
     ctx.drawLinearGradient(rim, start: CGPoint(x: 0.5, y: 0.9), end: CGPoint(x: 0.5, y: 0.1), options: [])
     ctx.restoreGState()
+    }
 }
 
-func png(size: Int) -> Data {
+func png(size: Int, fullBleed: Bool = false) -> Data {
     let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: size, pixelsHigh: size, bitsPerSample: 8,
                                samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB,
                                bytesPerRow: 0, bitsPerPixel: 0)!
@@ -90,7 +95,7 @@ func png(size: Int) -> Data {
     let ctx = NSGraphicsContext.current!.cgContext
     ctx.scaleBy(x: CGFloat(size), y: CGFloat(size))
     ctx.setLineWidth(1.0 / CGFloat(size))
-    draw(ctx)
+    draw(ctx, fullBleed: fullBleed)
     NSGraphicsContext.restoreGraphicsState()
     return rep.representation(using: .png, properties: [:])!
 }
@@ -105,4 +110,5 @@ let specs: [(String, Int)] = [
 for (name, size) in specs {
     try! png(size: size).write(to: URL(fileURLWithPath: "\(out)/\(name).png"))
 }
+try! png(size: 1024, fullBleed: true).write(to: URL(fileURLWithPath: "\(out)/fullbleed_1024.png"))
 print("Ikoni piirretty: \(out)")

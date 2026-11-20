@@ -1,0 +1,3 @@
+// Yhteiset asetukset. Paikalliset (esim. Apple Developer -tiimi) tiedostossa Local.xcconfig,
+// jota ei viedä gitiin. Malli: Local.xcconfig.example
+#include? "Local.xcconfig"

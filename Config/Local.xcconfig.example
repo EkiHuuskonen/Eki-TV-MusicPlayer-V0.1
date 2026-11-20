@@ -1,0 +1,3 @@
+// Kopioi tämä nimellä Local.xcconfig ja täytä oma tiimisi tunnus (Xcode → Settings → Accounts)
+DEVELOPMENT_TEAM = XXXXXXXXXX
+CODE_SIGN_STYLE = Automatic

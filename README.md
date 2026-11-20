@@ -9,14 +9,27 @@ Yksinkertainen macOS-musiikkisoitin (SwiftUI), joka hakee ja soittaa **laillises
 - "Nyt soi" -näkymä ja äänenvoimakkuuden säätö (⌘↑ / ⌘↓)
 - Sivupalkissa kappaleen **sävellaji ja soinnut** (automaattinen arvio kromagrammista)
 
-## Kaksi versiota samassa repossa
+## Versiot samassa repossa
 
 | Kansio | Alusta | Tekniikka |
 |---|---|---|
-| `/` (Sources/, Package.swift) | macOS 14+ | SwiftUI (natiivi) |
+| `Shared/`, `macOS/` | macOS 14+ | SwiftUI (natiivi) |
+| `Shared/`, `iOS/` | iPhone ja iPad (iOS 18+) | SwiftUI |
+| `Shared/`, `tvOS/` | Apple TV (tvOS 18+) | SwiftUI |
 | `electron/` | Windows, macOS, Linux | Electron + React + TypeScript |
 
-Molemmilla on samat ominaisuudet ja sama `library.json`-tiedostomuoto (suosikit ja soittolistat).
+Apple-versiot jakavat kansion `Shared/` koodin (mallit, hakulähteet, soitin, kirjasto, sointuanalyysi). Kaikilla versioilla on samat ominaisuudet ja sama `library.json`-tiedostomuoto (suosikit ja soittolistat).
+
+## Apple-versiot (macOS, iPhone, iPad, Apple TV)
+Vaatii täyden Xcoden ja XcodeGenin (`brew install xcodegen`).
+
+```bash
+xcodegen generate                 # luo EkiTVMusicPlayer.xcodeproj tiedostosta project.yml
+open EkiTVMusicPlayer.xcodeproj   # kohteet: MusicPlayer-macOS / -iOS / -tvOS
+./build_app.sh                    # rakentaa macOS-sovelluksen komentoriviltä
+```
+
+Omat allekirjoitusasetukset: kopioi `Config/Local.xcconfig.example` nimellä `Config/Local.xcconfig` ja täytä `DEVELOPMENT_TEAM` (tiedostoa ei viedä gitiin).
 
 ## Electron-versio (Windows ym.)
 Vaatii Node.js 22+.
@@ -28,17 +41,7 @@ npm run dev        # kehitysajo
 npm run dist:win   # Windows-asennusohjelma (rakennetaan parhaiten Windows-koneella)
 ```
 
-Windows-asennusohjelman voi rakentaa myös GitHub Actionsilla: *Actions → Build Windows → Run workflow*. Valmis `.exe` ladataan työnkulun artifacteista.
-
-## macOS-versio (SwiftUI)
-Vaatii macOS 14+ ja täyden Xcoden (SwiftUI-makrot).
-
-```bash
-./build_app.sh
-open ArkistoSoitin.app
-```
-
-Ikoni piirretään koodilla: `swift tools/make_icon.swift Resources/AppIcon.iconset`.
+Windows-asennusohjelman voi rakentaa myös GitHub Actionsilla: *Actions → Build Windows → Run workflow*. Tagi `vX.Y.Z` julkaisee valmiit `.exe`-tiedostot Releaseen.
 
 ## Lähteet ja lisenssit
 Sovellus ei sisällä musiikkia. Kappaleet haetaan suoraan palvelujen avoimista rajapinnoista, ja jokaisen kappaleen lisenssi (esim. Creative Commons) näkyy "Nyt soi" -näkymässä, kun se on tiedossa. Tarkista käytettävien palvelujen käyttöehdot ennen jakelua.
