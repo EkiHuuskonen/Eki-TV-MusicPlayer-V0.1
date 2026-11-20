@@ -26,6 +26,8 @@ struct TVNowPlayingTab: View {
                             Image(systemName: library.isFavorite(t) ? "heart.fill" : "heart")
                         }
                     }
+                    .buttonStyle(.bordered)
+                    .foregroundStyle(.primary)
                 }
                 .frame(width: 560)
 

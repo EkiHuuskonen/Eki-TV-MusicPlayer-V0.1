@@ -75,6 +75,8 @@ struct TVSearchTab: View {
                     HStack(spacing: 20) {
                         ForEach(SearchModel.genres, id: \.0) { g in
                             Button(g.0) { model.query = g.1; Task { await model.run(reset: true) } }
+                                .buttonStyle(.bordered)
+                                .foregroundStyle(.primary)
                         }
                     }
                     .padding(.vertical, 10)
