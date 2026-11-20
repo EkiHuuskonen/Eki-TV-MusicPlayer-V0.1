@@ -3,3 +3,9 @@ ArkistoSoitin.app/
 .DS_Store
 *.xcodeproj
 xcuserdata/
+
+# Electron-versio
+electron/node_modules/
+electron/out/
+electron/dist/
+electron/test-out/

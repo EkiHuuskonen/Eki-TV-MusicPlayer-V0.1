@@ -9,7 +9,28 @@ Yksinkertainen macOS-musiikkisoitin (SwiftUI), joka hakee ja soittaa **laillises
 - "Nyt soi" -näkymä ja äänenvoimakkuuden säätö (⌘↑ / ⌘↓)
 - Sivupalkissa kappaleen **sävellaji ja soinnut** (automaattinen arvio kromagrammista)
 
-## Rakentaminen
+## Kaksi versiota samassa repossa
+
+| Kansio | Alusta | Tekniikka |
+|---|---|---|
+| `/` (Sources/, Package.swift) | macOS 14+ | SwiftUI (natiivi) |
+| `electron/` | Windows, macOS, Linux | Electron + React + TypeScript |
+
+Molemmilla on samat ominaisuudet ja sama `library.json`-tiedostomuoto (suosikit ja soittolistat).
+
+## Electron-versio (Windows ym.)
+Vaatii Node.js 22+.
+
+```bash
+cd electron
+npm install
+npm run dev        # kehitysajo
+npm run dist:win   # Windows-asennusohjelma (rakennetaan parhaiten Windows-koneella)
+```
+
+Windows-asennusohjelman voi rakentaa myös GitHub Actionsilla: *Actions → Build Windows → Run workflow*. Valmis `.exe` ladataan työnkulun artifacteista.
+
+## macOS-versio (SwiftUI)
 Vaatii macOS 14+ ja täyden Xcoden (SwiftUI-makrot).
 
 ```bash
