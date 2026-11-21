@@ -193,6 +193,10 @@ struct TrackDownloadMenu: View {
             } else {
                 Label("Lataa", systemImage: "arrow.down.circle")
             }
+        } primaryAction: {
+            #if os(iOS)
+            if iconOnly, perm.isAllowed { DownloadCenter.shared.download(track, format: AppSettings.downloadFormat) }
+            #endif
         }
     }
 }

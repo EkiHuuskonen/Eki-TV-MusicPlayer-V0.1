@@ -79,5 +79,9 @@ struct ArkistoSoitinApp: App {
                 Button("Edellinen kappale") { player.previous() }.keyboardShortcut(.leftArrow, modifiers: .command)
             }
         }
+
+        Settings {
+            SettingsView().environment(library)
+        }
     }
 }

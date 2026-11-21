@@ -139,3 +139,40 @@ struct CastSheet: View {
         catch { self.error = error.localizedDescription }
     }
 }
+
+/// Home Assistant -asetukset: osoite, tunnus ja yhteyden testaus.
+struct HASettingsForm: View {
+    @State private var url = HAConfig.url
+    @State private var token = HAConfig.token
+    @State private var message: String?
+    @State private var players: [HAMediaPlayer] = []
+
+    var body: some View {
+        Form {
+            Section {
+                TextField("http://192.168.1.10:8123", text: $url)
+                    .textInputAutocapitalization(.never).autocorrectionDisabled().keyboardType(.URL)
+                SecureField("Pitkäaikainen käyttöoikeustunnus", text: $token)
+                    .textInputAutocapitalization(.never).autocorrectionDisabled()
+                Button("Tallenna ja testaa yhteys") {
+                    HAConfig.url = url; HAConfig.token = token
+                    Task {
+                        do {
+                            players = try await HAClient.players()
+                            message = "Yhteys toimii: \(players.count) soitinta löytyi."
+                        } catch { message = error.localizedDescription; players = [] }
+                    }
+                }
+                if let message { Text(message).font(.callout).foregroundStyle(.secondary) }
+            } footer: {
+                Text("Luo tunnus Home Assistantissa: oma profiili → Suojaus → Pitkäaikaiset käyttöoikeustunnukset. Tunnus tallennetaan vain tämän laitteen avaimenperään.")
+            }
+            if !players.isEmpty {
+                Section("Löytyneet soittimet") {
+                    ForEach(players) { Label($0.name, systemImage: "hifispeaker") }
+                }
+            }
+        }
+        .navigationTitle("Home Assistant")
+    }
+}

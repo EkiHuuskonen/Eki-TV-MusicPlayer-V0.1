@@ -5,7 +5,7 @@ import Observation
 @Observable @MainActor
 final class SearchModel {
     var query = ""
-    var source: MusicSource = .all
+    var source: MusicSource = AppSettings.defaultSource
     var items: [ArchiveItem] = []
     var tracks: [Track] = []
     var page = 1

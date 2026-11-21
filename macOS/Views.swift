@@ -184,7 +184,7 @@ struct ContentView: View {
 
 struct SearchView: View {
     @State private var query = ""
-    @State private var source: MusicSource = .all
+    @State private var source: MusicSource = AppSettings.defaultSource
     @State private var items: [ArchiveItem] = []
     @State private var tracks: [Track] = []
     @State private var page = 1

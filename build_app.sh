@@ -16,4 +16,12 @@ xcodebuild -project EkiTVMusicPlayer.xcodeproj -scheme MusicPlayer-macOS \
 
 rm -rf "Eki-TV MusicPlayer.app"
 cp -R "build/dd/Build/Products/Release/Eki-TV MusicPlayer.app" .
+# Asennetaan Claude_Apps-kansioon (sen voi vetää Dockiin)
+INSTALL_DIR="${INSTALL_DIR:-/Applications/Claude_Apps}"
+if mkdir -p "$INSTALL_DIR" 2>/dev/null; then
+  pkill -f "Eki-TV MusicPlayer.app/Contents/MacOS" 2>/dev/null || true
+  rm -rf "$INSTALL_DIR/Eki-TV MusicPlayer.app"
+  cp -R "Eki-TV MusicPlayer.app" "$INSTALL_DIR/"
+  echo "Asennettu: $INSTALL_DIR/Eki-TV MusicPlayer.app"
+fi
 echo "Valmis: $(pwd)/Eki-TV MusicPlayer.app"

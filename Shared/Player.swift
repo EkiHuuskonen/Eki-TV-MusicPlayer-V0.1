@@ -10,7 +10,13 @@ final class Player {
     var currentTime: Double = 0
     var duration: Double = 0
     var shuffle = false
-    var volume: Float = 0.8 { didSet { player.volume = volume; if volume > 0 && isMuted { isMuted = false } } }
+    var volume: Float = Float(AppSettings.defaultStartVolume) {
+        didSet {
+            player.volume = volume
+            if volume > 0 && isMuted { isMuted = false }
+            AppSettings.rememberVolume(volume)
+        }
+    }
     var isMuted = false { didSet { player.isMuted = isMuted } }
 
     // Toisto toisella laitteella (Home Assistant). nil = tämä laite.
@@ -34,6 +40,7 @@ final class Player {
     @ObservationIgnored private var localFile: URL?
 
     init() {
+        volume = AppSettings.initialVolume   // oletus 25 % tai viimeksi käytetty (Asetukset)
         player.volume = volume
         timeObserver = player.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.25, preferredTimescale: 600), queue: .main) { [weak self] t in
             Task { @MainActor in

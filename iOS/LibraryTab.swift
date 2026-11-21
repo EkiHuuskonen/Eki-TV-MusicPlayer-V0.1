@@ -6,6 +6,7 @@ struct LibraryTab: View {
     @State private var newName = ""
     @State private var renaming: Playlist?
     @State private var renameText = ""
+    @State private var showSettings = false
 
     var body: some View {
         NavigationStack {
@@ -53,6 +54,19 @@ struct LibraryTab: View {
                 }
             }
             .navigationTitle("Kirjasto")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { showSettings = true } label: { Image(systemName: "gearshape") }
+                }
+            }
+            .sheet(isPresented: $showSettings) {
+                NavigationStack {
+                    SettingsView()
+                        .navigationTitle("Asetukset")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Valmis") { showSettings = false } } }
+                }
+            }
             .alert("Uusi soittolista", isPresented: $showNew) {
                 TextField("Nimi", text: $newName)
                 Button("Luo") { library.createPlaylist(name: newName) }

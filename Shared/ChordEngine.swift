@@ -23,6 +23,10 @@ final class ChordEngine {
 
     func analyze(_ track: Track) {
         task?.cancel()
+        if !AppSettings.chordsEnabled {
+            state = .failed("Sointuanalyysi on pois päältä (Asetukset).")
+            return
+        }
         if track.isLive {
             state = .failed("Radiolähetyksiä ei voi analysoida. Sävellaji ja soinnut tunnistetaan vain tiedostoista.")
             return
