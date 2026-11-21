@@ -43,6 +43,8 @@ targets:
         NSHighResolutionCapable: true
         NSAppTransportSecurity:
           NSAllowsArbitraryLoadsInMedia: true
+          NSAllowsLocalNetworking: true
+        NSLocalNetworkUsageDescription: Eki-TV Music hakee kotiverkon Home Assistant -soittimet ja ohjaa niitä.
 
   MusicPlayer-iOS:
     type: application
@@ -73,6 +75,8 @@ targets:
         UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
         NSAppTransportSecurity:
           NSAllowsArbitraryLoadsInMedia: true
+          NSAllowsLocalNetworking: true
+        NSLocalNetworkUsageDescription: Eki-TV Music hakee kotiverkon Home Assistant -soittimet ja ohjaa niitä.
 
   MusicPlayer-tvOS:
     type: application
@@ -96,3 +100,5 @@ targets:
         UILaunchScreen: {}
         NSAppTransportSecurity:
           NSAllowsArbitraryLoadsInMedia: true
+          NSAllowsLocalNetworking: true
+        NSLocalNetworkUsageDescription: Eki-TV Music hakee kotiverkon Home Assistant -soittimet ja ohjaa niitä.

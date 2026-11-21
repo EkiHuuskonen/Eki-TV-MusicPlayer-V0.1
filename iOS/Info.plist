@@ -26,7 +26,11 @@
 	<dict>
 		<key>NSAllowsArbitraryLoadsInMedia</key>
 		<true/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
 	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Eki-TV Music hakee kotiverkon Home Assistant -soittimet ja ohjaa niitä.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

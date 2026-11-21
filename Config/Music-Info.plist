@@ -2,7 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
 	<key>NSAppTransportSecurity</key>
-	<dict><key>NSAllowsArbitraryLoadsInMedia</key><true/></dict>
+	<dict><key>NSAllowsArbitraryLoadsInMedia</key><true/><key>NSAllowsLocalNetworking</key><true/></dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Eki-TV hakee kotiverkon Home Assistant -soittimet ja ohjaa niitä.</string>
 	<key>UIBackgroundModes</key>
 	<array><string>audio</string></array>
 </dict></plist>

@@ -28,8 +28,12 @@
 	<dict>
 		<key>NSAllowsArbitraryLoadsInMedia</key>
 		<true/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
 	</dict>
 	<key>NSHighResolutionCapable</key>
 	<true/>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Eki-TV Music hakee kotiverkon Home Assistant -soittimet ja ohjaa niitä.</string>
 </dict>
 </plist>

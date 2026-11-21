@@ -53,6 +53,8 @@ struct NowPlayingTab: View {
                         .buttonStyle(.plain)
                         .font(.title2)
 
+                        CastButtons()
+
                         Divider().padding(.horizontal)
 
                         ChordPanel()
