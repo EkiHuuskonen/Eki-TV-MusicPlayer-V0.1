@@ -84,12 +84,13 @@ enum ArchiveAPI {
                 return $0.name.localizedStandardCompare($1.name) == .orderedAscending
             }
         let albumArtist = m.metadata?.creator?.string
+        let licenseString = m.metadata?.licenseurl?.string
         let tracks = chosen.map { f in
             Track(itemID: id, file: f.name,
                   title: f.title?.string ?? stripExt(f.name),
                   artist: f.creator?.string ?? albumArtist,
                   duration: parseLength(f.length?.string),
-                  albumTitle: m.metadata?.title?.string)
+                  albumTitle: m.metadata?.title?.string, license: licenseString)
         }
         let license = m.metadata?.licenseurl?.string.flatMap { URL(string: $0) }
         return ItemDetail(title: m.metadata?.title?.string ?? id, creator: albumArtist, licenseURL: license, tracks: tracks)

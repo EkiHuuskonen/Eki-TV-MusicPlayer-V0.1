@@ -3,6 +3,7 @@ import { useStore } from '../store'
 import type { MenuItem } from '../store'
 import { formatTime, isLive, sourceLabel, thumbUrl, trackId } from '../util'
 import type { Track } from '../types'
+import { trackDownloadItems } from '../download'
 
 export function Cover({ url, size, round = 6 }: { url?: string; size: number; round?: number }): React.JSX.Element {
   const [failed, setFailed] = useState(false)
@@ -25,7 +26,8 @@ export function trackMenu(t: Track, tracks: Track[], index: number): MenuItem[] 
       label: st.isFavorite(t) ? 'Poista suosikeista' : 'Lisää suosikkeihin',
       onClick: () => st.toggleFavorite(t)
     },
-    { label: '', onClick: () => {}, separator: true }
+    { label: '', onClick: () => {}, separator: true },
+    ...(isLive(t) ? [] : [...trackDownloadItems(t), { label: '', onClick: () => {}, separator: true }])
   ]
   for (const p of st.playlists) {
     items.push({ label: `Lisää soittolistalle: ${p.name}`, onClick: () => useStore.getState().addToPlaylist(p.id, [t]) })
@@ -91,6 +93,19 @@ export function TrackRow({
       >
         {fav ? '♥' : '♡'}
       </button>
+      {!isLive(t) && (
+        <button
+          className="icon-btn"
+          title="Lataa kappale"
+          onClick={(e) => {
+            e.stopPropagation()
+            const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
+            openMenu(r.left, r.bottom + 4, trackDownloadItems(t))
+          }}
+        >
+          ⭳
+        </button>
+      )}
       {isLive(t) ? (
         <span className="live">LIVE</span>
       ) : (

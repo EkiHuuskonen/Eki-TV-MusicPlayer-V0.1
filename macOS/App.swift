@@ -21,6 +21,30 @@ struct ArkistoSoitinApp: App {
                 exit(0)
             }
         }
+        // Testitila: ArkistoSoitin --download-test hakusana kansio  (lataa yhden kappaleen jokaisesta lähteestä, kokeilee WAV-muunnoksen)
+        if let i = CommandLine.arguments.firstIndex(of: "--download-test"), i + 2 < CommandLine.arguments.count {
+            let q = CommandLine.arguments[i + 1]
+            let dir = URL(fileURLWithPath: CommandLine.arguments[i + 2], isDirectory: true)
+            Task {
+                for s in MusicSource.allCases where s != .all && s != .radio {
+                    do {
+                        let b = try await SourcesAPI.fetch(s, query: q, page: 1)
+                        var picked = b.tracks.first { Downloader.permission($0).isAllowed && ($0.duration ?? 9999) < 600 }
+                        if picked == nil, let it = b.items.first {   // albumeista (Internet Archive): ensimmäinen kappale
+                            picked = (try? await ArchiveAPI.details(id: it.id))?.tracks.first
+                        }
+                        guard let t = picked else { print("\(s.title): ei sopivaa kappaletta"); continue }
+                        print("\(s.title): \(t.title) | lisenssi=\(t.license ?? "-") | lupa=\(Downloader.permission(t))")
+                        for f in [DownloadFormat.best, .wav] {
+                            let d = try await Downloader.download(t, into: dir.appendingPathComponent(s.title), format: f)
+                            let size = (try? FileManager.default.attributesOfItem(atPath: d.url.path)[.size] as? Int) ?? 0
+                            print("   \(f.rawValue): \(d.url.lastPathComponent) | \(d.quality) | \(size / 1024) kt\(d.note.map { " | huomio: " + $0 } ?? "")")
+                        }
+                    } catch { print("\(s.title): VIRHE \(error.localizedDescription)") }
+                }
+                exit(0)
+            }
+        }
         // Testitila: ArkistoSoitin --analyze tiedosto.wav
         if let i = CommandLine.arguments.firstIndex(of: "--analyze"), i + 1 < CommandLine.arguments.count {
             let url = URL(fileURLWithPath: CommandLine.arguments[i + 1])

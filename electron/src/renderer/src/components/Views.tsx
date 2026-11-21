@@ -4,6 +4,22 @@ import { albumDetail } from '../sources'
 import { albumThumb, albumSourceLabel, detailsUrl, sourceLabel, thumbUrl } from '../util'
 import type { AlbumItem, ItemDetail, Track } from '../types'
 import { Cover, TrackList } from './TrackList'
+import { allDownloadItems } from '../download'
+
+function DownloadAllButton({ tracks, name }: { tracks: Track[]; name: string }): React.JSX.Element {
+  const openMenu = useStore((s) => s.openMenu)
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation()
+        const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
+        openMenu(r.left, r.bottom + 4, allDownloadItems(tracks, name))
+      }}
+    >
+      ⭳ Lataa kaikki ▾
+    </button>
+  )
+}
 
 function AddToPlaylistButton({ tracks, label }: { tracks: Track[]; label: string }): React.JSX.Element {
   const openMenu = useStore((s) => s.openMenu)
@@ -91,6 +107,7 @@ export function AlbumView({ item }: { item: AlbumItem }): React.JSX.Element {
                 {allFav ? '♥ Albumi suosikeissa' : '♡ Lisää albumi suosikkeihin'}
               </button>
               <AddToPlaylistButton tracks={tracks} label="Lisää kaikki soittolistalle" />
+              <DownloadAllButton tracks={tracks} name={[item.creator, item.title].filter(Boolean).join(' - ')} />
             </div>
           )}
         </div>
@@ -116,9 +133,12 @@ export function FavoritesView(): React.JSX.Element {
       <div className="page-head">
         <h1>Suosikit</h1>
         {favorites.length > 0 && (
-          <button className="primary" onClick={() => play(favorites)}>
-            ▶ Soita
-          </button>
+          <div className="actions">
+            <DownloadAllButton tracks={favorites} name="Suosikit" />
+            <button className="primary" onClick={() => play(favorites)}>
+              ▶ Soita
+            </button>
+          </div>
         )}
       </div>
       <div className="scroll">
@@ -147,9 +167,12 @@ export function PlaylistView({ id }: { id: string }): React.JSX.Element {
           <div className="muted">{p.tracks.length} kappaletta</div>
         </div>
         {p.tracks.length > 0 && (
-          <button className="primary" onClick={() => play(p.tracks)}>
-            ▶ Soita
-          </button>
+          <div className="actions">
+            <DownloadAllButton tracks={p.tracks} name={p.name} />
+            <button className="primary" onClick={() => play(p.tracks)}>
+              ▶ Soita
+            </button>
+          </div>
         )}
       </div>
       <div className="scroll">
@@ -184,6 +207,7 @@ export function LibraryTracksView({ artist, album }: { artist: string; album: st
             <button className="primary" onClick={() => play(tracks)}>
               ▶ Soita
             </button>
+            <DownloadAllButton tracks={tracks} name={album ? `${artist} - ${album}` : artist} />
           </div>
         </div>
       </div>

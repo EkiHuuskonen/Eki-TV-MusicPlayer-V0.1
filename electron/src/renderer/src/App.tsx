@@ -5,7 +5,7 @@ import SearchView from './components/SearchView'
 import { AlbumView, FavoritesView, LibraryTracksView, NowPlayingView, PlaylistView } from './components/Views'
 import PlayerBar from './components/PlayerBar'
 import ChordPanel from './components/ChordPanel'
-import { ContextMenu, DialogHost } from './components/Overlays'
+import { ContextMenu, DialogHost, DownloadBanner } from './components/Overlays'
 
 export default function App(): React.JSX.Element {
   const view = useStore((s) => s.view)
@@ -78,6 +78,7 @@ export default function App(): React.JSX.Element {
         {showChords && <ChordPanel />}
       </div>
       <PlayerBar />
+      <DownloadBanner />
       <ContextMenu />
       <DialogHost />
     </div>

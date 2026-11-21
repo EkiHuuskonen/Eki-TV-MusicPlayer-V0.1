@@ -92,6 +92,8 @@ interface State {
   setFinnish: (f: boolean) => void
 
   // käyttöliittymä
+  dl: { busy: boolean; status?: string; error?: string } | null
+  setDl: (d: { busy: boolean; status?: string; error?: string } | null) => void
   menu: { x: number; y: number; items: MenuItem[] } | null
   openMenu: (x: number, y: number, items: MenuItem[]) => void
   closeMenu: () => void
@@ -455,6 +457,8 @@ export const useStore = create<State>()((set, get) => {
       set({ finnish: f })
     },
 
+    dl: null,
+    setDl: (d) => set({ dl: d }),
     menu: null,
     openMenu: (x, y, items) => set({ menu: { x, y, items } }),
     closeMenu: () => set({ menu: null }),

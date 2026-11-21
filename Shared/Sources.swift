@@ -120,6 +120,9 @@ enum SourcesAPI {
             let permalink: String?
             let is_streamable: Bool?
             let genre: String?
+            struct Dl: Decodable { let is_downloadable: Bool? }
+            let is_downloadable: Bool?
+            let download: Dl?
         }
         let data: [Lossy<T>]
     }
@@ -145,7 +148,8 @@ enum SourcesAPI {
               albumTitle: album ?? t.genre, source: "audius",
               streamString: "https://api.audius.co/v1/tracks/\(t.id)/stream?app_name=ArkistoSoitin",
               artworkString: https(t.artwork?.large),
-              pageString: t.permalink.map { "https://audius.co" + $0 }, collection: album)
+              pageString: t.permalink.map { "https://audius.co" + $0 }, collection: album,
+              downloadable: t.is_downloadable ?? t.download?.is_downloadable)
     }
 
     private struct AudiusUsers: Decodable {
@@ -239,9 +243,22 @@ enum SourcesAPI {
             return Track(itemID: String(it.upload_id), file: "", title: it.upload_name,
                          artist: it.user_real_name ?? it.user_name, duration: parseClock(f.length),
                          albumTitle: "ccMixter", source: "ccmixter", streamString: stream,
-                         pageString: https(it.file_page_url), license: lic)
+                         pageString: https(it.file_page_url), license: lic,
+                         downloadString: bestCCFile(it.files))
         }
         return Batch(tracks: tracks, full: r.count >= pageSize)
+    }
+
+    /// Paras ladattava tiedosto: samasta miksauksesta häviötön (flac, wav, aiff) mp3:n sijaan.
+    /// ccMixter-julkaisuissa on usein myös erillisiä raitoja (_1.flac, _2.flac...), joten verrataan tiedostonimeä mp3:een.
+    private static func bestCCFile(_ files: [CCItem.File]?) -> String? {
+        let urls = (files ?? []).compactMap { https($0.url) }
+        guard let mp3 = urls.first(where: { $0.lowercased().hasSuffix(".mp3") }) else { return nil }
+        let base = String(mp3.dropLast(4)).lowercased()
+        for ext in ["flac", "wav", "aiff", "aif"] {
+            if let m = urls.first(where: { $0.lowercased() == base + "." + ext }) { return m }
+        }
+        return mp3
     }
 
     // MARK: Openverse (sisältää mm. Jamendon, Freesoundin ja Wikimedian CC-musiikkia)

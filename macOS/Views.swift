@@ -32,6 +32,7 @@ struct LibraryTracksView: View {
                         Text("\(tracks.count) kappaletta").font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
+                    AllDownloadMenu(tracks: tracks, name: album.map { artist + " - " + $0 } ?? artist).fixedSize()
                     Button { player.play(tracks) } label: { Label("Soita", systemImage: "play.fill") }
                         .buttonStyle(.borderedProminent)
                 }
@@ -163,6 +164,7 @@ struct ContentView: View {
                 }
             }
             Divider()
+            DownloadBanner()
             PlayerBar(onShowNowPlaying: { selection = .nowPlaying })
         }
         .alert("Uusi soittolista", isPresented: $showNew) {
@@ -244,8 +246,11 @@ struct SearchView: View {
                                             .compactMap { $0 }.joined(separator: " · ")
                                         Text(sub).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                                     }
+                                    Spacer()
+                                    AlbumDownloadMenu(item: item).menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize().help("Lataa albumi")
                                 }
                             }
+                            .contextMenu { AlbumDownloadMenu(item: item, iconOnly: false) }
                         }
                     }
                 }
@@ -360,6 +365,7 @@ struct ItemDetailView: View {
                             }
                             .tint(allFav ? .pink : nil)
                             AddToPlaylistMenu(tracks: tracks, title: "Lisää kaikki soittolistalle").fixedSize()
+                            AllDownloadMenu(tracks: tracks, name: [item.creator, item.title].compactMap { $0 }.joined(separator: " - ")).fixedSize()
                         }
                     }
                 }
@@ -403,6 +409,7 @@ struct FavoritesView: View {
                 Text("Suosikit").font(.title.bold())
                 Spacer()
                 if !library.favorites.isEmpty {
+                    AllDownloadMenu(tracks: library.favorites, name: "Suosikit").fixedSize()
                     Button { player.play(library.favorites) } label: { Label("Soita", systemImage: "play.fill") }
                         .buttonStyle(.borderedProminent)
                 }
@@ -431,6 +438,7 @@ struct PlaylistView: View {
                     }
                     Spacer()
                     if !p.tracks.isEmpty {
+                        AllDownloadMenu(tracks: p.tracks, name: p.name).fixedSize()
                         Button { player.play(p.tracks) } label: { Label("Soita", systemImage: "play.fill") }
                             .buttonStyle(.borderedProminent)
                     }
@@ -500,6 +508,7 @@ struct TrackRowView: View {
             }
             .buttonStyle(.plain)
             .help(library.isFavorite(t) ? "Poista suosikeista" : "Lisää suosikkeihin")
+            if !t.isLive { TrackDownloadMenu(track: t).menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize().help("Lataa kappale") }
             if t.isLive { Text("LIVE").font(.caption.bold()).foregroundStyle(.red) }
             else if let d = t.duration { Text(formatTime(d)).monospacedDigit().foregroundStyle(.secondary) }
         }
@@ -509,6 +518,7 @@ struct TrackRowView: View {
             Button("Soita") { player.play(tracks, start: index) }
             Button(library.isFavorite(t) ? "Poista suosikeista" : "Lisää suosikkeihin") { library.toggleFavorite(t) }
             AddToPlaylistMenu(tracks: [t], title: "Lisää soittolistalle")
+            if !t.isLive { TrackDownloadMenu(track: t, iconOnly: false) }
         }
     }
 }

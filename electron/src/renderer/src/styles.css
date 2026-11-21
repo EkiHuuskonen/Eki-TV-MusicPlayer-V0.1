@@ -203,3 +203,13 @@ input[type='range'] { accent-color: var(--accent); }
 
 ::-webkit-scrollbar { width: 10px; }
 ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
+
+.dl-banner {
+  position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%); z-index: 50;
+  display: flex; align-items: flex-start; gap: 10px; min-width: 340px; max-width: 640px;
+  padding: 10px 14px; background: var(--panel2); border: 1px solid var(--accent); border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45); font-size: 13px;
+}
+.dl-banner.err { border-color: #e8a03a; }
+.dl-status { font-weight: 600; }
+.dl-error { color: #e8a03a; font-size: 12px; white-space: pre-line; margin-top: 2px; }

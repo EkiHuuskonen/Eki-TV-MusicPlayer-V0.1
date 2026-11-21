@@ -24,6 +24,7 @@ struct TrackRow: View {
             if isCurrent { Image(systemName: player.isPlaying ? "speaker.wave.2.fill" : "speaker.fill").foregroundStyle(.tint).font(.caption) }
             if t.isLive { Text("LIVE").font(.caption2.bold()).foregroundStyle(.red) }
             else if let d = t.duration { Text(formatTime(d)).font(.caption).monospacedDigit().foregroundStyle(.secondary) }
+            if !t.isLive { TrackDownloadMenu(track: t).frame(width: 32, height: 32) }
             Button { library.toggleFavorite(t) } label: {
                 Image(systemName: library.isFavorite(t) ? "heart.fill" : "heart")
                     .foregroundStyle(library.isFavorite(t) ? Color.pink : .secondary)
@@ -38,6 +39,7 @@ struct TrackRow: View {
             Button(library.isFavorite(t) ? "Poista suosikeista" : "Lisää suosikkeihin",
                    systemImage: library.isFavorite(t) ? "heart.slash" : "heart") { library.toggleFavorite(t) }
             AddToPlaylistMenu(tracks: [t], title: "Lisää soittolistalle")
+            if !t.isLive { TrackDownloadMenu(track: t, iconOnly: false) }
         }
     }
 }
@@ -95,7 +97,10 @@ struct AlbumRow: View {
                     .compactMap { $0 }.joined(separator: " · ")
                 Text(sub).font(.caption).foregroundStyle(.secondary).lineLimit(1)
             }
+            Spacer(minLength: 4)
+            AlbumDownloadMenu(item: item).frame(width: 32, height: 32)
         }
+        .contextMenu { AlbumDownloadMenu(item: item, iconOnly: false) }
     }
 }
 
@@ -133,6 +138,8 @@ struct AlbumDetailView: View {
                         }
                         .buttonStyle(.bordered).tint(allFav ? .pink : .accentColor)
                         AddToPlaylistMenu(tracks: tracks, title: "Soittolistalle").labelStyle(.iconOnly)
+                            .buttonStyle(.bordered)
+                        AllDownloadMenu(tracks: tracks, name: [item.creator, item.title].compactMap { $0 }.joined(separator: " - "), iconOnly: true)
                             .buttonStyle(.bordered)
                     }
                     .buttonStyle(.borderless)

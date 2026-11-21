@@ -91,7 +91,8 @@ export async function archiveDetails(id: string): Promise<ItemDetail> {
     title: flex(f.title) ?? String(f.name).replace(/^.*\//, '').replace(/\.[^.]+$/, ''),
     artist: flex(f.creator) ?? albumArtist,
     duration: parseLength(flex(f.length)),
-    albumTitle
+    albumTitle,
+    license: flex(meta.licenseurl)
   }))
   return { title: albumTitle, creator: albumArtist, licenseURL: flex(meta.licenseurl), tracks }
 }
@@ -114,6 +115,8 @@ interface AudiusTrack {
   permalink?: string
   is_streamable?: boolean
   genre?: string
+  is_downloadable?: boolean
+  download?: { is_downloadable?: boolean } | null
 }
 
 function audiusTrack(t: AudiusTrack, album?: string): Track {
@@ -128,7 +131,8 @@ function audiusTrack(t: AudiusTrack, album?: string): Track {
     streamString: `https://api.audius.co/v1/tracks/${t.id}/stream?app_name=EkiTVMusicPlayer`,
     artworkString: https(t.artwork?.['480x480']),
     pageString: t.permalink ? 'https://audius.co' + t.permalink : undefined,
-    collection: album
+    collection: album,
+    downloadable: t.is_downloadable ?? t.download?.is_downloadable ?? undefined
   }
 }
 
@@ -205,6 +209,19 @@ interface CCItem {
   files?: { download_url?: string; file_format_info?: { ps?: string } | unknown[] }[]
 }
 
+/** Paras ladattava tiedosto: samasta miksauksesta häviötön (flac, wav, aiff) mp3:n sijaan. */
+function bestCCFile(files: CCItem['files']): string | undefined {
+  const urls = (files ?? []).map((f) => https(f.download_url)).filter((u): u is string => !!u)
+  const mp3 = urls.find((u) => u.toLowerCase().endsWith('.mp3'))
+  if (!mp3) return undefined
+  const base = mp3.slice(0, -4).toLowerCase()
+  for (const ext of ['flac', 'wav', 'aiff', 'aif']) {
+    const m = urls.find((u) => u.toLowerCase() === `${base}.${ext}`)
+    if (m) return m
+  }
+  return mp3
+}
+
 async function ccmixter(q: string, page: number): Promise<Batch> {
   const params: [string, string][] = [
     ['f', 'json'],
@@ -232,7 +249,8 @@ async function ccmixter(q: string, page: number): Promise<Batch> {
       source: 'ccmixter',
       streamString: stream,
       pageString: https(it.file_page_url),
-      license: it.license_name?.split(/\s+/).filter(Boolean).join(' ')
+      license: it.license_name?.split(/\s+/).filter(Boolean).join(' '),
+      downloadString: bestCCFile(it.files)
     })
   }
   return { items: [], tracks, full: r.length >= PAGE }

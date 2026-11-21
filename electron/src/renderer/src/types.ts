@@ -15,6 +15,10 @@ export interface Track {
   license?: string
   /** todellisen albumin nimi (Audius-albumit) */
   collection?: string
+  /** parhaan laadun latausosoite, jos se tunnetaan jo haussa (ccMixter: flac/wav ennen mp3:a) */
+  downloadString?: string
+  /** Audius: saako kappaleen ladata (artistin valinta) */
+  downloadable?: boolean
 }
 
 export interface AlbumItem {

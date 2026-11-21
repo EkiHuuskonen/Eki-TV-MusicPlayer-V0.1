@@ -80,3 +80,24 @@ export function DialogHost(): React.JSX.Element | null {
     </div>
   )
 }
+
+/** Latauksen tila: näkyy kun lataus on käynnissä, valmis tai epäonnistui. */
+export function DownloadBanner(): React.JSX.Element | null {
+  const dl = useStore((s) => s.dl)
+  const setDl = useStore((s) => s.setDl)
+  if (!dl || (!dl.busy && !dl.status && !dl.error)) return null
+  return (
+    <div className={`dl-banner ${dl.error ? 'err' : ''}`}>
+      <span className="dl-icon">{dl.busy ? '⏳' : dl.error ? '⚠' : '✓'}</span>
+      <div className="grow">
+        {dl.status && <div className="dl-status">{dl.status}</div>}
+        {dl.error && <div className="dl-error">{dl.error}</div>}
+      </div>
+      {!dl.busy && (
+        <button className="icon-btn" onClick={() => setDl(null)} title="Sulje">
+          ✕
+        </button>
+      )}
+    </div>
+  )
+}

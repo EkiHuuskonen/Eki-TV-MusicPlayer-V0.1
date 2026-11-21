@@ -82,6 +82,7 @@ struct FavoritesScreen: View {
         }
         .listStyle(.plain)
         .navigationTitle("Suosikit")
+        .toolbar { ToolbarItem(placement: .primaryAction) { AllDownloadMenu(tracks: library.favorites, name: "Suosikit", iconOnly: true) } }
     }
 }
 
@@ -116,6 +117,7 @@ struct ArtistScreen: View {
         }
         .listStyle(.plain)
         .navigationTitle(artist)
+        .toolbar { ToolbarItem(placement: .primaryAction) { AllDownloadMenu(tracks: a?.tracks ?? [], name: artist, iconOnly: true) } }
     }
 }
 
@@ -138,6 +140,7 @@ struct AlbumTracksScreen: View {
         .listStyle(.plain)
         .navigationTitle(album)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar { ToolbarItem(placement: .primaryAction) { AllDownloadMenu(tracks: tracks, name: artist + " - " + album, iconOnly: true) } }
     }
 }
 
@@ -160,5 +163,6 @@ struct PlaylistScreen: View {
         }
         .listStyle(.plain)
         .navigationTitle(p?.name ?? "Soittolista")
+        .toolbar { ToolbarItem(placement: .primaryAction) { AllDownloadMenu(tracks: p?.tracks ?? [], name: p?.name ?? "Soittolista", iconOnly: true) } }
     }
 }

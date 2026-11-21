@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useStore } from '../store'
 import { SOURCE_TITLES, albumSourceLabel, albumThumb } from '../util'
+import { albumItemDownloadItems } from '../download'
 import type { SourceId } from '../types'
 import { Cover, TrackList } from './TrackList'
 
@@ -90,7 +91,15 @@ export default function SearchView(): React.JSX.Element {
           <section>
             <h2>{s.query ? 'Albumit – artistin omat ensin' : 'Albumit'}</h2>
             {s.items.map((a) => (
-              <div key={a.id} className="album-row" onClick={() => setView({ kind: 'album', item: a })}>
+              <div
+                key={a.id}
+                className="album-row"
+                onClick={() => setView({ kind: 'album', item: a })}
+                onContextMenu={(e) => {
+                  e.preventDefault()
+                  useStore.getState().openMenu(e.clientX, e.clientY, albumItemDownloadItems(a))
+                }}
+              >
                 <div className="cover-wrap">
                   <Cover url={albumThumb(a)} size={56} round={8} />
                   <span className="disc">💿</span>
@@ -106,6 +115,17 @@ export default function SearchView(): React.JSX.Element {
                       .join(' · ')}
                   </div>
                 </div>
+                <button
+                  className="icon-btn"
+                  title="Lataa albumi"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                    useStore.getState().openMenu(r.left, r.bottom + 4, albumItemDownloadItems(a))
+                  }}
+                >
+                  ⭳
+                </button>
                 <span className="chev-r">›</span>
               </div>
             ))}

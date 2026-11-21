@@ -32,6 +32,10 @@ struct Track: Identifiable, Hashable, Codable {
     var license: String? = nil
     /// Todellisen albumin nimi (Audius-albumit); kirjaston ryhmittelyä varten
     var collection: String? = nil
+    /// Parhaan laadun latausosoite, jos se tunnetaan jo haussa (ccMixter: flac/wav ennen mp3:a)
+    var downloadString: String? = nil
+    /// Audius: saako kappaleen ladata (artistin valinta)
+    var downloadable: Bool? = nil
 
     var id: String { source.map { "\($0):\(itemID)" } ?? "\(itemID)/\(file)" }
     var isLive: Bool { source == "radio" }

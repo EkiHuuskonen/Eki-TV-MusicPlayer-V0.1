@@ -20,6 +20,7 @@ struct RootView: View {
             }
         }
         .tabViewStyle(.sidebarAdaptable)
+        .safeAreaInset(edge: .top, spacing: 0) { DownloadBanner() }
         #if DEBUG
         .task {
             // Testitila: --demo käynnistää Audius-kappaleen ja avaa "Nyt soi" -välilehden
